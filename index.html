@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galerie PNG - Vue stable</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+    }
+
+    header {
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .card p {
+      text-align: center;
+      padding: 8px;
+      font-size: 0.9rem;
+      margin: 0;
+      background: #fafafa;
+      color: #333;
+    }
+
+    /* === Lightbox === */
+    #lightbox {
+      visibility: hidden;
+      opacity: 0;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    #lightbox.visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    #lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 8px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+      transform: scale(1);
+      transition: transform 0.3s ease;
+    }
+
+    #lightbox img.zoom {
+      transform: scale(1.02);
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 40px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s ease;
+    }
+
+    #closeBtn:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📸 Galerie PNG (sans clignotement)</h1>
+  </header>
+
+  <div class="gallery" id="gallery">Chargement...</div>
+
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <span id="closeBtn">&times;</span>
+    <img id="lightboxImg" src="" alt="aperçu">
+  </div>
+
+  <script>
+    const gallery = document.getElementById("gallery");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightboxImg");
+    const closeBtn = document.getElementById("closeBtn");
+
+    // ⚙️ Modifie ici ton repo GitHub
+    const user = "hdaviot95-blip";
+    const repo = "png-gallery";
+    const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/`;
+
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(files => {
+        gallery.innerHTML = "";
+        files
+          .filter(f => f.name.toLowerCase().endsWith(".png"))
+          .forEach(f => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <img src="${f.download_url}" alt="${f.name}">
+              <p>${f.name}</p>
+            `;
+            card.onclick = () => {
+              lightboxImg.src = f.download_url;
+              lightbox.classList.add("visible");
+              // petit effet de zoom subtil
+              setTimeout(() => lightboxImg.classList.add("zoom"), 20);
+            };
+            gallery.appendChild(card);
+          });
+      })
+      .catch(err => {
+        console.error(err);
+        gallery.innerHTML = `<p style="text-align:center;color:#999;">⚠️ Erreur lors du chargement des images.</p>`;
+      });
+
+    // Fermeture fluide
+    const closeLightbox = () => {
+      lightboxImg.classList.remove("zoom");
+      lightbox.classList.remove("visible");
+    };
+    closeBtn.onclick = closeLightbox;
+    lightbox.onclick = (e) => {
+      if (e.target === lightbox) closeLightbox();
+    };
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeLightbox();
+    });
+  </script>
+</body>
+</html>
